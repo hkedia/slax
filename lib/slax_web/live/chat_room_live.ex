@@ -86,6 +86,7 @@ defmodule SlaxWeb.ChatRoomLive do
       socket
       |> assign(hide_topic?: false)
       |> assign(room: room)
+      |> assign(page_title: "#" <> room.name)
 
     {:noreply, socket}
   end
