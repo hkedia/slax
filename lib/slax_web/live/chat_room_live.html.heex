@@ -77,4 +77,7 @@
       <% end %>
     </ul>
   </div>
+  <div class="flex flex-col flex-grow overflow-auto">
+    <.message :for={message <- @messages} message={message} />
+  </div>
 </div>
