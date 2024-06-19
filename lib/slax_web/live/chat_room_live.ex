@@ -6,6 +6,7 @@ defmodule SlaxWeb.ChatRoomLive do
 
   attr :active, :boolean, required: true
   attr :room, Room, required: true
+  attr :dom_id, :string, required: true
 
   defp room_link(assigns) do
     ~H"""
