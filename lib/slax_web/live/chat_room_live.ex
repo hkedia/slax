@@ -79,6 +79,24 @@ defmodule SlaxWeb.ChatRoomLive do
       |> assign(room: room)
       |> assign(messages: messages)
       |> assign(page_title: "#" <> room.name)
+      |> assign_message_form(Chat.change_message(%Message{}))
+
+    {:noreply, socket}
+  end
+
+  def handle_event("submit-message", %{"message" => message_params}, socket) do
+    %{current_user: current_user, room: room} = socket.assigns
+
+    socket =
+      case Chat.create_message(room, message_params, current_user) do
+        {:ok, message} ->
+          socket
+          |> update(:messages, &(&1 ++ [message]))
+          |> assign_message_form(Chat.change_message(%Message{}))
+
+        {:error, changeset} ->
+          assign_message_form(socket, changeset)
+      end
 
     {:noreply, socket}
   end
@@ -89,5 +107,15 @@ defmodule SlaxWeb.ChatRoomLive do
       |> update(:hide_topic?, &(!&1))
 
     {:noreply, socket}
+  end
+
+  def handle_event("validate-message", %{"message" => message_params}, socket) do
+    changeset = Chat.change_message(%Message{}, message_params)
+
+    {:noreply, assign_message_form(socket, changeset)}
+  end
+
+  defp assign_message_form(socket, changeset) do
+    assign(socket, :new_message_form, to_form(changeset))
   end
 end
