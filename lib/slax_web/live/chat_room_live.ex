@@ -28,6 +28,7 @@ defmodule SlaxWeb.ChatRoomLive do
 
   attr :message, Message, required: true
   attr :dom_id, :string, required: true
+  attr :timezone, :string, required: true
 
   defp message(assigns) do
     ~H"""
@@ -40,8 +41,8 @@ defmodule SlaxWeb.ChatRoomLive do
               <%= username(@message.user) %>
             </span>
           </.link>
-          <span class="ml-1 text-xs text-gray-500">
-            <%= message_timestamp(@message) %>
+          <span :if={@timezone} class="ml-1 text-xs text-gray-500">
+            <%= message_timestamp(@message, @timezone) %>
           </span>
           <p class="text-sm"><%= @message.body %></p>
         </div>
@@ -50,8 +51,9 @@ defmodule SlaxWeb.ChatRoomLive do
     """
   end
 
-  defp message_timestamp(message) do
+  defp message_timestamp(message, timezone) do
     message.inserted_at
+    |> Timex.Timezone.convert(timezone)
     |> Timex.format!("%-l:%M %p", :strftime)
   end
 
@@ -64,10 +66,12 @@ defmodule SlaxWeb.ChatRoomLive do
 
   def mount(_params, _session, socket) do
     rooms = Chat.list_rooms()
+    timezone = get_connect_params(socket)["timezone"]
 
     socket =
       socket
       |> stream(:rooms, rooms)
+      |> assign(timezone: timezone)
 
     {:ok, socket}
   end
