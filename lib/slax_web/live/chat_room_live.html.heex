@@ -10,8 +10,13 @@
     <div class="flex items-center h-8 px-3 group">
       <span class="ml-2 leading-none font-medium text-sm">Rooms</span>
     </div>
-    <div id="rooms-list">
-      <.room_link :for={room <- @rooms} room={room} active={room.id == @room.id} />
+    <div id="rooms-list" phx-update="stream">
+      <.room_link
+        :for={{dom_id, room} <- @streams.rooms}
+        room={room}
+        dom_id={dom_id}
+        active={room.id == @room.id}
+      />
     </div>
   </div>
 </div>
@@ -77,8 +82,8 @@
       <% end %>
     </ul>
   </div>
-  <div class="flex flex-col flex-grow overflow-auto">
-    <.message :for={message <- @messages} message={message} />
+  <div id="room-messages" class="flex flex-col flex-grow overflow-auto" phx-update="stream">
+    <.message :for={{dom_id, message} <- @streams.messages} dom_id={dom_id} message={message} />
   </div>
   <div class="h-14 bg-white px-4 pb-4">
     <.form

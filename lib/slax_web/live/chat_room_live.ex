@@ -14,6 +14,7 @@ defmodule SlaxWeb.ChatRoomLive do
         "flex items-center h-8 text-sm pl-8 pr-3",
         (@active && "bg-slate-300") || "hover:bg-slate-300"
       ]}
+      id={@dom_id}
       patch={~p"/rooms/#{@room}"}
     >
       <.icon name="hero-hashtag" class="h-4 w-4" />
@@ -25,10 +26,11 @@ defmodule SlaxWeb.ChatRoomLive do
   end
 
   attr :message, Message, required: true
+  attr :dom_id, :string, required: true
 
   defp message(assigns) do
     ~H"""
-    <div class="relative flex px-4 py-3">
+    <div id={@dom_id} class="relative flex px-4 py-3">
       <div class="h-10 w-10 rounded flex-shrink-0 bg-slate-300"></div>
       <div class="ml-2">
         <div class="-mt-1">
@@ -56,7 +58,7 @@ defmodule SlaxWeb.ChatRoomLive do
 
     socket =
       socket
-      |> assign(rooms: rooms)
+      |> stream(:rooms, rooms)
 
     {:ok, socket}
   end
@@ -77,7 +79,7 @@ defmodule SlaxWeb.ChatRoomLive do
       socket
       |> assign(hide_topic?: false)
       |> assign(room: room)
-      |> assign(messages: messages)
+      |> stream(:messages, messages, reset: true)
       |> assign(page_title: "#" <> room.name)
       |> assign_message_form(Chat.change_message(%Message{}))
 
@@ -91,7 +93,7 @@ defmodule SlaxWeb.ChatRoomLive do
       case Chat.create_message(room, message_params, current_user) do
         {:ok, message} ->
           socket
-          |> update(:messages, &(&1 ++ [message]))
+          |> stream_insert(:messages, message)
           |> assign_message_form(Chat.change_message(%Message{}))
 
         {:error, changeset} ->
