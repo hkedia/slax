@@ -1,11 +1,15 @@
 defmodule Slax.Chat do
-  alias Slax.Chat.{Room, Message}
+  alias Slax.Chat.{Room, Message, RoomMembership}
   alias Slax.Repo
   alias Slax.Accounts.User
 
   import Ecto.Query
 
   @pubsub Slax.PubSub
+
+  def join_room!(room, user) do
+    Repo.insert!(%RoomMembership{room: room, user: user})
+  end
 
   def subscribe_to_room(room) do
     Phoenix.PubSub.subscribe(@pubsub, topic(room.id))
