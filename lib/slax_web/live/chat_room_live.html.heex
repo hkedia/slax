@@ -85,6 +85,7 @@
   <div id="room-messages" class="flex flex-col flex-grow overflow-auto" phx-update="stream">
     <.message
       :for={{dom_id, message} <- @streams.messages}
+      current_user={@current_user}
       dom_id={dom_id}
       message={message}
       timezone={@timezone}
