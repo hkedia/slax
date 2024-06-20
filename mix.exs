@@ -19,7 +19,12 @@ defmodule Slax.MixProject do
   def application do
     [
       mod: {Slax.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications:
+        if Mix.env() == :dev do
+          [:observer, :wx, :logger, :runtime_tools]
+        else
+          [:logger, :runtime_tools]
+        end
     ]
   end
 
