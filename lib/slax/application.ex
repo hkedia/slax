@@ -12,6 +12,8 @@ defmodule Slax.Application do
       Slax.Repo,
       {DNSCluster, query: Application.get_env(:slax, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Slax.PubSub},
+      SlaxWeb.Presence,
+
       # Start the Finch HTTP client for sending emails
       {Finch, name: Slax.Finch},
       # Start a worker by calling: Slax.Worker.start_link(arg)
