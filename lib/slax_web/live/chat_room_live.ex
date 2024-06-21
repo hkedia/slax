@@ -112,6 +112,12 @@ defmodule SlaxWeb.ChatRoomLive do
       |> assign(timezone: timezone)
       |> assign(users: users)
       |> assign(online_users: OnlineUsers.list())
+      |> stream_configure(:messages,
+        dom_id: fn
+          %Message{id: id} -> "message-#{id}"
+          :unread_marker -> "messages-unread-marker"
+        end
+      )
 
     {:ok, socket}
   end
@@ -130,9 +136,16 @@ defmodule SlaxWeb.ChatRoomLive do
           Chat.get_first_room!()
       end
 
-    messages = Chat.list_messages_in_room(room)
-
     Chat.subscribe_to_room(room)
+
+    last_read_id = Chat.get_last_read_id(room, socket.assigns.current_user)
+
+    messages =
+      room
+      |> Chat.list_messages_in_room()
+      |> maybe_insert_unread_marker(last_read_id)
+
+    Chat.update_last_read_id(room, socket.assigns.current_user)
 
     socket =
       socket
@@ -196,6 +209,10 @@ defmodule SlaxWeb.ChatRoomLive do
   end
 
   def handle_info({:new_message, message}, socket) do
+    if message.room_id == socket.assigns.room.id do
+      Chat.update_last_read_id(message.room, socket.assigns.current_user)
+    end
+
     socket =
       socket
       |> stream_insert(:messages, message)
@@ -216,5 +233,17 @@ defmodule SlaxWeb.ChatRoomLive do
 
   defp assign_message_form(socket, changeset) do
     assign(socket, :new_message_form, to_form(changeset))
+  end
+
+  defp maybe_insert_unread_marker(messges, nil), do: messges
+
+  defp maybe_insert_unread_marker(messages, last_read_id) do
+    {read, unread} = Enum.split_while(messages, &(&1.id <= last_read_id))
+
+    if unread == [] do
+      read
+    else
+      read ++ [:unread_marker | unread]
+    end
   end
 end

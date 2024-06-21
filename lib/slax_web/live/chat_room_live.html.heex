@@ -120,13 +120,21 @@
     phx-update="stream"
     phx-hook="RoomMessages"
   >
-    <.message
-      :for={{dom_id, message} <- @streams.messages}
-      current_user={@current_user}
-      dom_id={dom_id}
-      message={message}
-      timezone={@timezone}
-    />
+    <%= for {dom_id, message} <- @streams.messages do %>
+      <%= if message == :unread_marker do %>
+        <div id={dom_id} class="w-full flex text-red-500 items-center gap-3 pr-5">
+          <div class="w-full h-px grow bg-red-500"></div>
+          <div class="text-sm">New</div>
+        </div>
+      <% else %>
+        <.message
+          current_user={@current_user}
+          dom_id={dom_id}
+          message={message}
+          timezone={@timezone}
+        />
+      <% end %>
+    <% end %>
   </div>
   <div :if={@joined?} class="h-14 bg-white px-4 pb-4">
     <.form
