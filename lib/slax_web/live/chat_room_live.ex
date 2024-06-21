@@ -96,7 +96,7 @@ defmodule SlaxWeb.ChatRoomLive do
   end
 
   def mount(_params, _session, socket) do
-    rooms = Chat.list_rooms()
+    rooms = Chat.list_joined_rooms(socket.assigns.current_user)
     users = Accounts.list_users()
     timezone = get_connect_params(socket)["timezone"]
 
@@ -138,6 +138,7 @@ defmodule SlaxWeb.ChatRoomLive do
       socket
       |> assign(hide_topic?: false)
       |> assign(room: room)
+      |> assign(joined?: Chat.joined?(room, socket.assigns.current_user))
       |> stream(:messages, messages, reset: true)
       |> assign(page_title: "#" <> room.name)
       |> assign_message_form(Chat.change_message(%Message{}))
@@ -150,13 +151,17 @@ defmodule SlaxWeb.ChatRoomLive do
     %{current_user: current_user, room: room} = socket.assigns
 
     socket =
-      case Chat.create_message(room, message_params, current_user) do
-        {:ok, _message} ->
-          socket
-          |> assign_message_form(Chat.change_message(%Message{}))
+      if Chat.joined?(room, current_user) do
+        case Chat.create_message(room, message_params, current_user) do
+          {:ok, _message} ->
+            socket
+            |> assign_message_form(Chat.change_message(%Message{}))
 
-        {:error, changeset} ->
-          assign_message_form(socket, changeset)
+          {:error, changeset} ->
+            assign_message_form(socket, changeset)
+        end
+      else
+        socket
       end
 
     {:noreply, socket}
@@ -179,6 +184,14 @@ defmodule SlaxWeb.ChatRoomLive do
   def handle_event("delete-message", %{"id" => id}, socket) do
     Chat.delete_message_by_id(id, socket.assigns.current_user)
 
+    {:noreply, socket}
+  end
+
+  def handle_event("join-room", _, socket) do
+    current_user = socket.assigns.current_user
+    Chat.join_room!(socket.assigns.room, current_user)
+    Chat.subscribe_to_room(socket.assigns.room)
+    socket = assign(socket, joined?: true, rooms: Chat.list_joined_rooms(current_user))
     {:noreply, socket}
   end
 
