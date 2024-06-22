@@ -8,7 +8,7 @@
   </div>
   <div class="mt-4 overflow-auto">
     <div class="flex items-center h-8 px-3 group">
-      <span class="ml-2 leading-none font-medium text-sm">Rooms</span>
+      <.toggler on_click={toggle_rooms()} dom_id="rooms-toggler" text="Rooms" />
     </div>
     <div id="rooms-list">
       <.room_link
@@ -38,7 +38,7 @@
     <div class="mt-4">
       <div class="flex items-center h-8 px-3 group">
         <div class="flex items-center flex-grow focus:outline-none">
-          <span class="ml-2 leading-none font-medium text-sm">Users</span>
+          <.toggler on_click={toggle_users()} dom_id="users-toggler" text="Users" />
         </div>
       </div>
       <div id="users-list">

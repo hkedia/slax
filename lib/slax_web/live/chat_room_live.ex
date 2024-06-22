@@ -42,6 +42,27 @@ defmodule SlaxWeb.ChatRoomLive do
     """
   end
 
+  attr :dom_id, :string, required: true
+  attr :text, :string, required: true
+  attr :on_click, JS, required: true
+
+  defp toggler(assigns) do
+    ~H"""
+    <button id={@dom_id} phx-click={@on_click} class="flex items-center flex-grow focus:outline-none">
+      <.icon id={@dom_id <> "-chevron-down"} name="hero-chevron-down" class="h-4 w-4" />
+      <.icon
+        id={@dom_id <> "-chevron-right"}
+        name="hero-chevron-right"
+        class="h-4 w-4"
+        style="display:none;"
+      />
+      <span class="ml-2 leading-none font-medium text-sm">
+        <%= @text %>
+      </span>
+    </button>
+    """
+  end
+
   attr :current_user, User, required: true
   attr :message, Message, required: true
   attr :dom_id, :string, required: true
@@ -282,5 +303,17 @@ defmodule SlaxWeb.ChatRoomLive do
     else
       read ++ [:unread_marker | unread]
     end
+  end
+
+  defp toggle_rooms() do
+    JS.toggle(to: "#rooms-toggler-chevron-down")
+    |> JS.toggle(to: "#rooms-toggler-chevron-right")
+    |> JS.toggle(to: "#rooms-list")
+  end
+
+  defp toggle_users() do
+    JS.toggle(to: "#users-toggler-chevron-down")
+    |> JS.toggle(to: "#users-toggler-chevron-right")
+    |> JS.toggle(to: "#users-list")
   end
 end
