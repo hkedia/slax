@@ -2,6 +2,7 @@ defmodule SlaxWeb.ChatRoomLive.Edit do
   use SlaxWeb, :live_view
 
   alias Slax.Chat
+  import SlaxWeb.RoomComponents
 
   def render(assigns) do
     ~H"""
@@ -17,14 +18,7 @@ defmodule SlaxWeb.ChatRoomLive.Edit do
           </.link>
         </:actions>
       </.header>
-
-      <.simple_form for={@form} id="room-form" phx-change="validate-room" phx-submit="save-room">
-        <.input field={@form[:name]} type="text" label="Name" phx-debounce={500} />
-        <.input field={@form[:topic]} type="text" label="Topic" phx-debounce={500} />
-        <:actions>
-          <.button phx-disable-with="Saving..." class="w-full">Save</.button>
-        </:actions>
-      </.simple_form>
+      <.room_form form={@form} />
     </div>
     """
   end
