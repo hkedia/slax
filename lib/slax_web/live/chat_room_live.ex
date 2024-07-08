@@ -6,6 +6,7 @@ defmodule SlaxWeb.ChatRoomLive do
   alias Slax.Accounts.User
   alias Slax.Accounts
   alias SlaxWeb.OnlineUsers
+  import SlaxWeb.RoomComponents
 
   attr :count, :integer, required: true
 
