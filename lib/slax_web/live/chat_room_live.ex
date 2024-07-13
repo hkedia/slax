@@ -86,7 +86,7 @@ defmodule SlaxWeb.ChatRoomLive do
         <div class="-mt-1">
           <.link class="text-sm font-semibold hover:underline">
             <span>
-              <%= username(@message.user) %>
+              <%= @message.user.username %>
             </span>
           </.link>
           <span :if={@timezone} class="ml-1 text-xs text-gray-500">
@@ -112,7 +112,7 @@ defmodule SlaxWeb.ChatRoomLive do
           <span class="w-2 h-2 rounded-full border-2 border-gray-500"></span>
         <% end %>
       </div>
-      <span class="ml-2 leading-none"><%= username(@user) %></span>
+      <span class="ml-2 leading-none"><%= @user.username %></span>
     </.link>
     """
   end
@@ -121,13 +121,6 @@ defmodule SlaxWeb.ChatRoomLive do
     message.inserted_at
     |> Timex.Timezone.convert(timezone)
     |> Timex.format!("%-l:%M %p", :strftime)
-  end
-
-  defp username(user) do
-    user.email
-    |> String.split("@")
-    |> List.first()
-    |> String.capitalize()
   end
 
   def mount(_params, _session, socket) do
