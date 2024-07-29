@@ -136,21 +136,19 @@ defmodule SlaxWeb.ChatRoomLive do
 
     Enum.each(rooms, fn {chat, _} -> Chat.subscribe_to_room(chat) end)
 
-    socket =
-      socket
-      |> assign(:rooms, rooms)
-      |> assign(timezone: timezone)
-      |> assign(users: users)
-      |> assign(online_users: OnlineUsers.list())
-      |> assign_room_form(Chat.change_room(%Room{}))
-      |> stream_configure(:messages,
-        dom_id: fn
-          %Message{id: id} -> "message-#{id}"
-          :unread_marker -> "messages-unread-marker"
-        end
-      )
-
-    {:ok, socket}
+    socket
+    |> assign(:rooms, rooms)
+    |> assign(timezone: timezone)
+    |> assign(users: users)
+    |> assign(online_users: OnlineUsers.list())
+    |> assign_room_form(Chat.change_room(%Room{}))
+    |> stream_configure(:messages,
+      dom_id: fn
+        %Message{id: id} -> "message-#{id}"
+        :unread_marker -> "messages-unread-marker"
+      end
+    )
+    |> ok()
   end
 
   defp assign_room_form(socket, changeset) do
@@ -176,25 +174,23 @@ defmodule SlaxWeb.ChatRoomLive do
 
     Chat.update_last_read_id(room, socket.assigns.current_user)
 
-    socket =
-      socket
-      |> assign(hide_topic?: false)
-      |> assign(room: room)
-      |> assign(joined?: Chat.joined?(room, socket.assigns.current_user))
-      |> stream(:messages, messages, reset: true)
-      |> assign(page_title: "#" <> room.name)
-      |> assign_message_form(Chat.change_message(%Message{}))
-      |> push_event("scroll_messages_to_bottom", %{})
-      |> update(:rooms, fn rooms ->
-        room_id = room.id
+    socket
+    |> assign(hide_topic?: false)
+    |> assign(room: room)
+    |> assign(joined?: Chat.joined?(room, socket.assigns.current_user))
+    |> stream(:messages, messages, reset: true)
+    |> assign(page_title: "#" <> room.name)
+    |> assign_message_form(Chat.change_message(%Message{}))
+    |> push_event("scroll_messages_to_bottom", %{})
+    |> update(:rooms, fn rooms ->
+      room_id = room.id
 
-        Enum.map(rooms, fn
-          {%Room{id: ^room_id} = room, _} -> {room, 0}
-          other -> other
-        end)
+      Enum.map(rooms, fn
+        {%Room{id: ^room_id} = room, _} -> {room, 0}
+        other -> other
       end)
-
-    {:noreply, socket}
+    end)
+    |> noreply()
   end
 
   def handle_event("submit-message", %{"message" => message_params}, socket) do
