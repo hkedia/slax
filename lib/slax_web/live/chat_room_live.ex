@@ -43,6 +43,31 @@ defmodule SlaxWeb.ChatRoomLive do
     """
   end
 
+  defp format_date(%Date{} = date) do
+    today = Date.utc_today()
+
+    case Date.diff(today, date) do
+      0 ->
+        "Today"
+
+      1 ->
+        "Yesterday"
+
+      _ ->
+        format_str = "%A, %B %e#{ordinal(date.day)}#{if today.year != date.year, do: " %Y"}"
+        Timex.format!(date, format_str, :strftime)
+    end
+  end
+
+  defp ordinal(day) do
+    cond do
+      rem(day, 10) == 1 and day != 11 -> "st"
+      rem(day, 10) == 2 and day != 12 -> "nd"
+      rem(day, 10) == 3 and day != 13 -> "rd"
+      true -> "th"
+    end
+  end
+
   attr :dom_id, :string, required: true
   attr :text, :string, required: true
   attr :on_click, JS, required: true
@@ -146,6 +171,7 @@ defmodule SlaxWeb.ChatRoomLive do
       dom_id: fn
         %Message{id: id} -> "message-#{id}"
         :unread_marker -> "messages-unread-marker"
+        %Date{} = date -> to_string(date)
       end
     )
     |> ok()
@@ -170,6 +196,9 @@ defmodule SlaxWeb.ChatRoomLive do
     messages =
       room
       |> Chat.list_messages_in_room()
+      |> Enum.group_by(&DateTime.to_date(&1.inserted_at))
+      |> Enum.sort_by(fn {date, _messages} -> date end, &(Date.compare(&1, &2) != :gt))
+      |> Enum.flat_map(fn {date, messages} -> [date | messages] end)
       |> maybe_insert_unread_marker(last_read_id)
 
     Chat.update_last_read_id(room, socket.assigns.current_user)
@@ -315,7 +344,11 @@ defmodule SlaxWeb.ChatRoomLive do
   defp maybe_insert_unread_marker(messges, nil), do: messges
 
   defp maybe_insert_unread_marker(messages, last_read_id) do
-    {read, unread} = Enum.split_while(messages, &(&1.id <= last_read_id))
+    {read, unread} =
+      Enum.split_while(messages, fn
+        %Message{} = message -> message.id <= last_read_id
+        _ -> true
+      end)
 
     if unread == [] do
       read
